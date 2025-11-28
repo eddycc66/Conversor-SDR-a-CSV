@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conversor SDR a CSV - Topografía</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --dark: #34495e;
+            --success: #2ecc71;
+            --warning: #f39c12;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7fa;
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px 0;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+        
+        .header-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 2px solid white;
+        }
+        
+        .title-section {
+            flex: 1;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 8px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .author {
+            text-align: right;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+            padding: 25px;
+            margin-bottom: 25px;
+            transition: transform 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--light);
+        }
+        
+        .input-section, .output-section {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+            transition: border 0.3s;
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--secondary);
+            box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.2);
+        }
+        
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+        
+        .btn-secondary {
+            background-color: var(--light);
+            color: var(--dark);
+        }
+        
+        .btn-secondary:hover {
+            background-color: #d5dbdb;
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background-color: #27ae60;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .file-label {
+            display: inline-block;
+            padding: 12px 20px;
+            background-color: var(--light);
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .file-label:hover {
+            background-color: #d5dbdb;
+        }
+        
+        .preview {
+            background-color: #f8f9fa;
+            border: 1px dashed #ccc;
+            border-radius: 5px;
+            padding: 15px;
+            min-height: 100px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .stat-item {
+            background-color: var(--light);
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-align: center;
+            flex: 1;
+            min-width: 120px;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--secondary);
+        }
+        
+        .instructions {
+            background-color: #e8f4fc;
+            border-left: 4px solid var(--secondary);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .warnings {
+            background-color: #fef9e7;
+            border-left: 4px solid var(--warning);
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .coordinate-info {
+            background-color: #e8f6f3;
+            border-left: 4px solid #1abc9c;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 0 5px 5px 0;
+        }
+        
+        .format-selector {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .format-option {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding: 25px;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 10px;
+        }
+        
+        .copyright {
+            margin-top: 10px;
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+        
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                gap: 15px;
+            }
+            
+            .logo-section {
+                justify-content: center;
+            }
+            
+            .author {
+                text-align: center;
+            }
+            
+            .btn-group {
+                flex-direction: column;
+            }
+            
+            button {
+                width: 100%;
+            }
+            
+            .stats {
+                flex-direction: column;
+            }
+            
+            .format-selector {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <div class="logo-section">
+                <img src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEiDAKjdyOSH0FwBWL-cf4MRGV7lO3Vz64VfkKTVHuoNFqJvp75EVBt_Y1vaHwSNVbVWatClCJ3r09LESViMB0KfrwaLEa0kJmrLujB2R7VqlbQE-XmpZcx6h4nq6rSr1b0xWhup8TN0JbpjMhw1Tdtg7lKT3oJLeShF8dFbRTSV5e-aiZcMYUVBACTrToUP/s320/Image%20to%20video%20%E4%B8%A8%20que%20el%20dron%20ingrese%20volando%20y%20se%20ponga%20sobre%20la%20monta%C3%B1a.gif" 
+                     alt="Logo Topografía" class="logo">
+            </div>
+            <div class="title-section">
+                <h1>Conversor SDR a CSV</h1>
+                <p class="subtitle">Para uso en AutoCAD Civil 3D - Topografía</p>
+            </div>
+            <div class="author">
+                <p>Desarrollado por:<br><strong>M.Sc. Edwin Calle Condori</strong></p>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="card">
+            <h2 class="card-title">Instrucciones</h2>
+            <div class="instructions">
+                <p><strong>1.</strong> Pegue el contenido de su archivo SDR en el área de texto o cargue el archivo.</p>
+                <p><strong>2.</strong> Seleccione el formato de su archivo SDR (o deje en Automático).</p>
+                <p><strong>3.</strong> Haga clic en "Convertir a CSV" para procesar los datos.</p>
+                <p><strong>4.</strong> Revise la vista previa y descargue el archivo CSV resultante.</p>
+                <p><strong>5.</strong> En Civil 3D, use: <em>Puntos → Crear puntos → Importar puntos</em> con formato PNEZD.</p>
+            </div>
+            <div class="coordinate-info">
+                <p><strong>Formato de coordenadas reconocido:</strong></p>
+                <p>• <strong>Norte:</strong> 7 dígitos + 3 decimales (0000000.000)</p>
+                <p>• <strong>Este:</strong> 6 dígitos + 3 decimales (000000.000)</p>
+                <p>• <strong>Altitud:</strong> 4 dígitos + 3 decimales (0000.000)</p>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">Entrada SDR</h2>
+            <div class="input-section">
+                <div class="format-selector">
+                    <div class="format-option">
+                        <input type="radio" id="formatAuto" name="format" value="auto" checked>
+                        <label for="formatAuto">Detección automática</label>
+                    </div>
+                    <div class="format-option">
+                        <input type="radio" id="format08TP" name="format" value="08TP">
+                        <label for="format08TP">Formato 08TP (Leica)</label>
+                    </div>
+                    <div class="format-option">
+                        <input type="radio" id="formatSimple" name="format" value="simple">
+                        <label for="formatSimple">Formato simple (ID Coordenadas)</label>
+                    </div>
+                </div>
+                
+                <textarea id="sdrInput" placeholder="Pegue aquí el contenido de su archivo SDR...">00NMSDR33 V04-04.02     09-Oct-20 06:07 111111
+10NMREP FLORES      121111
+06NM0.99912567      
+01NM:iM-55 V01-01    002571iM-55 V01-01    00257131                                0.000           
+03NM1.550           
+08TP       EST2remed8175826.410     596447.889      3688.917        EST             
+08TP              1r8175846.513     596366.450      3710.089        EST             
+08TP              3r8175852.975     596375.664      3709.128        EST             
+08TP              4R8175859.399     596384.866      3709.588        EST             
+08TP              5R8175865.881     596394.131      3708.843        EST             
+08TP              6R8175872.340     596403.304      3707.721        EST             
+08TP              8R8175862.513     596422.572      3700.374        EST             
+08TP              9R8175856.708     596414.281      3699.091        EST             
+08TP             10R8175854.380     596410.946      3698.983        EST             
+08TP             11R8175850.255     596405.044      3700.238        EST             
+08TP             12R8175848.981     596403.269      3700.367        EST             
+08TP             13R8175843.776     596395.837      3701.060        EST             
+08TP             14R8175843.565     596395.495      3701.072        EST             
+08TP             15R8175838.142     596387.775      3701.893        EST             
+08TP             16R8175837.315     596386.602      3702.096        EST             
+08TP             17R8175830.194     596376.408      3702.003        EST             
+08TP             19R8175815.419     596395.512      3694.201        EST             
+08TP             20R8175819.378     596400.919      3693.747        EST             
+08TP             21R8175824.973     596408.521      3693.578        EST             
+08TP             22R8175830.307     596416.352      3693.654        EST             
+08TP             23R8175835.256     596423.873      3693.305        EST             
+08TP             24R8175835.552     596424.140      3693.431        EST             
+08TP             25R8175839.150     596428.077      3695.054        EST             
+08TP             26R8175839.340     596427.402      3695.916        EST             
+08TP             28R8175833.873     596431.087      3691.694        EST             
+08TP             29R8175830.416     596427.349      3690.702        EST             
+08TP             30R8175826.507     596421.452      3691.498        EST             
+08TP             31R8175819.884     596411.777      3691.782        EST             
+08TP             32R8175811.556     596400.412      3692.468        EST             
+08TP             33R8175799.436     596415.623      3687.624        EST             
+08TP             34R8175805.112     596423.049      3687.196        EST             
+08TP             35R8175806.058     596424.303      3687.261        EST             
+08TP             36R8175811.579     596431.571      3687.167        EST             
+08TP            est28175826.405     596447.898      3688.917        EST             
+08TP             37R8175812.203     596432.360      3687.381        EST             
+08TP             38R8175819.235     596441.600      3688.315        EST             
+08TP             39R8175819.553     596442.005      3688.321        EST             
+08TP             40R8175830.818     596456.739      3689.990        EST             
+08TP             42R8175825.747     596461.528      3685.844        EST             
+08TP             43R8175807.606     596450.468      3683.660        EST             
+08TP             44R8175796.066     596443.402      3683.778        EST             
+08TP             46R8175790.766     596440.339      3683.119        EST             
+08TP             48R8175784.276     596440.916      3680.947        EST             
+08TP             49R8175781.739     596441.162      3679.792        EST             
+08TP            AAAA8175826.406     596447.896      3688.916        EST             
+08TP            EST38175832.513     596381.996      3702.425        EST             
+08TP         EST1rem8175866.351     596388.391      3712.401        EST             
+08TP              V18175838.509     596370.563      3703.762        CANAL           
+08TP              V28175843.675     596358.831      3706.284        CANAL           
+08TP              1R8175844.258     596365.416      3709.495        CANAL           
+08TP              V38175839.546     596371.632      3703.825        CANAL</textarea>
+                
+                <div class="btn-group">
+                    <input type="file" id="fileInput" class="file-input" accept=".sdr,.txt">
+                    <label for="fileInput" class="file-label">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                            <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
+                        </svg>
+                        Cargar archivo SDR
+                    </label>
+                    
+                    <button id="convertBtn" class="btn-primary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h11.793l-3.147-3.146a.5.5 0 0 1 .708-.708l4 4a.5.5 0 0 1 0 .708l-4 4a.5.5 0 0 1-.708-.708L13.293 8.5H1.5A.5.5 0 0 1 1 8z"/>
+                        </svg>
+                        Convertir a CSV
+                    </button>
+                    
+                    <button id="clearBtn" class="btn-secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5zm3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0V6z"/>
+                            <path fill-rule="evenodd" d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1v1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4H4.118zM2.5 3V2h11v1h-11z"/>
+                        </svg>
+                        Limpiar
+                    </button>
+                </div>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-label">Líneas SDR</div>
+                        <div class="stat-value" id="lineCount">67</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Puntos detectados</div>
+                        <div class="stat-value" id="pointCount">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Formato detectado</div>
+                        <div class="stat-value" id="formatDetected">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h2 class="card-title">Salida CSV</h2>
+            <div class="output-section">
+                <div class="preview" id="csvPreview">El contenido CSV aparecerá aquí después de la conversión...</div>
+                
+                <div class="btn-group">
+                    <button id="downloadBtn" class="btn-success" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                            <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                        </svg>
+                        Descargar CSV
+                    </button>
+                    
+                    <button id="copyBtn" class="btn-secondary" disabled>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                            <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                            <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+                        </svg>
+                        Copiar al portapapeles
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <p><strong>Herramienta de conversión SDR a CSV para AutoCAD Civil 3D</strong></p>
+            <p>Desarrollado para topógrafos y profesionales de la construcción</p>
+            <div class="copyright">
+                <p>© 2024 M.Sc. Edwin Calle Condori - Todos los derechos reservados</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sdrInput = document.getElementById('sdrInput');
+            const fileInput = document.getElementById('fileInput');
+            const convertBtn = document.getElementById('convertBtn');
+            const clearBtn = document.getElementById('clearBtn');
+            const downloadBtn = document.getElementById('downloadBtn');
+            const copyBtn = document.getElementById('copyBtn');
+            const csvPreview = document.getElementById('csvPreview');
+            const lineCount = document.getElementById('lineCount');
+            const pointCount = document.getElementById('pointCount');
+            const formatDetected = document.getElementById('formatDetected');
+            
+            let csvContent = '';
+            
+            // Cargar archivo SDR
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        sdrInput.value = e.target.result;
+                        updateLineCount();
+                    };
+                    reader.readAsText(file);
+                }
+            });
+            
+            // Actualizar contador de líneas
+            sdrInput.addEventListener('input', updateLineCount);
+            
+            function updateLineCount() {
+                const lines = sdrInput.value.split('\n').filter(line => line.trim() !== '');
+                lineCount.textContent = lines.length;
+                pointCount.textContent = '0';
+                formatDetected.textContent = '-';
+            }
+            
+            // Función para detectar formato automáticamente
+            function detectFormat(text) {
+                const lines = text.split('\n').filter(line => line.trim() !== '');
+                
+                let count08TP = 0;
+                let countSimple = 0;
+                
+                lines.forEach(line => {
+                    if (line.startsWith('08TP')) {
+                        count08TP++;
+                    }
+                    
+                    // Patrón para formato simple con coordenadas específicas
+                    const simplePattern = /^\s*[A-Za-z0-9]+\s+\d{7}\.\d{3}\s+\d{6}\.\d{3}\s+\d{1,4}\.\d{3}/;
+                    if (simplePattern.test(line.trim())) {
+                        countSimple++;
+                    }
+                });
+                
+                if (count08TP > countSimple && count08TP > lines.length * 0.3) {
+                    return '08TP';
+                } else if (countSimple > lines.length * 0.3) {
+                    return 'simple';
+                } else {
+                    return 'simple';
+                }
+            }
+            
+            // Función para extraer puntos del formato 08TP con coordenadas específicas
+            function extractPoints08TP(lines) {
+                const points = [];
+                let pointNumber = 1;
+                
+                lines.forEach(line => {
+                    if (line.startsWith('08TP')) {
+                        // Extraer la parte después de "08TP"
+                        const content = line.substring(4).trim();
+                        
+                        // Patrón específico para coordenadas topográficas:
+                        // Norte: 7 dígitos + 3 decimales, Este: 6 dígitos + 3 decimales, Altitud: 1-4 dígitos + 3 decimales
+                        const coordPattern = /(\d{7}\.\d{3})\s+(\d{6}\.\d{3})\s+(\d{1,4}\.\d{3})/;
+                        const coordMatch = content.match(coordPattern);
+                        
+                        if (coordMatch) {
+                            const norte = coordMatch[1];
+                            const este = coordMatch[2];
+                            const altitud = coordMatch[3];
+                            
+                            // Extraer descripción (texto después de las coordenadas)
+                            let descripcion = 'EST';
+                            const afterCoords = content.substring(coordMatch.index + coordMatch[0].length).trim();
+                            const descMatch = afterCoords.match(/^([A-Za-z0-9]+)/);
+                            if (descMatch) {
+                                descripcion = descMatch[1];
+                            }
+                            
+                            // ID numérico secuencial
+                            const id = pointNumber++;
+                            
+                            points.push({
+                                id: id,
+                                norte: norte,
+                                este: este,
+                                altitud: altitud,
+                                descripcion: descripcion
+                            });
+                        } else {
+                            // Intentar con patrón más flexible si el específico falla
+                            const flexiblePattern = /(\d+\.\d+)\s+(\d+\.\d+)\s+(\d+\.\d+)/;
+                            const flexibleMatch = content.match(flexiblePattern);
+                            
+                            if (flexibleMatch) {
+                                const norte = flexibleMatch[1];
+                                const este = flexibleMatch[2];
+                                const altitud = flexibleMatch[3];
+                                
+                                let descripcion = 'EST';
+                                const afterCoords = content.substring(flexibleMatch.index + flexibleMatch[0].length).trim();
+                                const descMatch = afterCoords.match(/^([A-Za-z0-9]+)/);
+                                if (descMatch) {
+                                    descripcion = descMatch[1];
+                                }
+                                
+                                const id = pointNumber++;
+                                
+                                points.push({
+                                    id: id,
+                                    norte: norte,
+                                    este: este,
+                                    altitud: altitud,
+                                    descripcion: descripcion
+                                });
+                            }
+                        }
+                    }
+                });
+                
+                return points;
+            }
+            
+            // Función para extraer puntos del formato simple con coordenadas específicas
+            function extractPointsSimple(lines) {
+                const points = [];
+                let pointNumber = 1;
+                
+                lines.forEach(line => {
+                    const trimmedLine = line.trim();
+                    
+                    // Patrón específico para coordenadas topográficas
+                    const specificPattern = /^([A-Za-z0-9]*)\s+(\d{7}\.\d{3})\s+(\d{6}\.\d{3})\s+(\d{1,4}\.\d{3})(?:\s+([A-Za-z0-9]+))?/;
+                    const specificMatch = trimmedLine.match(specificPattern);
+                    
+                    if (specificMatch) {
+                        const norte = specificMatch[2];
+                        const este = specificMatch[3];
+                        const altitud = specificMatch[4];
+                        let descripcion = specificMatch[5] || 'EST';
+                        
+                        const id = pointNumber++;
+                        
+                        points.push({
+                            id: id,
+                            norte: norte,
+                            este: este,
+                            altitud: altitud,
+                            descripcion: descripcion
+                        });
+                    } else {
+                        // Patrón flexible para otros formatos
+                        const flexiblePattern = /^([A-Za-z0-9]*)\s+([\d,\.]+)\s+([\d,\.]+)\s+([\d,\.]+)(?:\s+([A-Za-z0-9]+))?/;
+                        const flexibleMatch = trimmedLine.match(flexiblePattern);
+                        
+                        if (flexibleMatch) {
+                            // Normalizar coordenadas (reemplazar coma por punto)
+                            let norte = flexibleMatch[2].replace(',', '.');
+                            let este = flexibleMatch[3].replace(',', '.');
+                            let altitud = flexibleMatch[4].replace(',', '.');
+                            let descripcion = flexibleMatch[5] || 'EST';
+                            
+                            const id = pointNumber++;
+                            
+                            points.push({
+                                id: id,
+                                norte: norte,
+                                este: este,
+                                altitud: altitud,
+                                descripcion: descripcion
+                            });
+                        }
+                    }
+                });
+                
+                return points;
+            }
+            
+            // Convertir SDR a CSV
+            convertBtn.addEventListener('click', function() {
+                const sdrText = sdrInput.value.trim();
+                if (!sdrText) {
+                    alert('Por favor, ingrese o cargue contenido SDR');
+                    return;
+                }
+                
+                const lines = sdrText.split('\n').filter(line => line.trim() !== '');
+                let points = [];
+                
+                // Determinar el formato a usar
+                const selectedFormat = document.querySelector('input[name="format"]:checked').value;
+                let detectedFormat = selectedFormat;
+                
+                if (selectedFormat === 'auto') {
+                    detectedFormat = detectFormat(sdrText);
+                }
+                
+                formatDetected.textContent = detectedFormat;
+                
+                // Extraer puntos según el formato
+                if (detectedFormat === '08TP') {
+                    points = extractPoints08TP(lines);
+                } else {
+                    points = extractPointsSimple(lines);
+                }
+                
+                // Generar contenido CSV
+                let csv = 'ID,NORTE,ESTE,ALTITUD,DESCRIPCION\n';
+                points.forEach(point => {
+                    csv += `${point.id},${point.norte},${point.este},${point.altitud},${point.descripcion}\n`;
+                });
+                
+                csvContent = csv;
+                csvPreview.textContent = csv;
+                pointCount.textContent = points.length;
+                
+                // Habilitar botones de descarga y copia
+                downloadBtn.disabled = false;
+                copyBtn.disabled = false;
+                
+                // Mostrar resumen
+                if (points.length > 0) {
+                    alert(`Conversión completada:\n- ${points.length} puntos procesados\n- Formato: ${detectedFormat}\n- IDs numéricos generados\n- Coordenadas reconocidas correctamente`);
+                } else {
+                    alert('No se pudieron extraer puntos. Verifique el formato del archivo SDR.');
+                }
+            });
+            
+            // Descargar CSV
+            downloadBtn.addEventListener('click', function() {
+                if (!csvContent) {
+                    alert('No hay contenido CSV para descargar');
+                    return;
+                }
+                
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'puntos_topograficos.csv');
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+            
+            // Copiar al portapapeles
+            copyBtn.addEventListener('click', function() {
+                if (!csvContent) {
+                    alert('No hay contenido CSV para copiar');
+                    return;
+                }
+                
+                navigator.clipboard.writeText(csvContent)
+                    .then(() => {
+                        alert('Contenido CSV copiado al portapapeles');
+                    })
+                    .catch(err => {
+                        console.error('Error al copiar: ', err);
+                        alert('Error al copiar al portapapeles');
+                    });
+            });
+            
+            // Limpiar todo
+            clearBtn.addEventListener('click', function() {
+                sdrInput.value = '';
+                csvPreview.textContent = 'El contenido CSV aparecerá aquí después de la conversión...';
+                csvContent = '';
+                lineCount.textContent = '0';
+                pointCount.textContent = '0';
+                formatDetected.textContent = '-';
+                downloadBtn.disabled = true;
+                copyBtn.disabled = true;
+                fileInput.value = '';
+                
+                document.getElementById('formatAuto').checked = true;
+            });
+            
+            // Inicializar contadores
+            updateLineCount();
+        });
+    </script>
+</body>
+</html>
